@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-18 16:19:15
+ * @Last Modified time: 2019-01-18 16:51:53
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
@@ -41,7 +41,6 @@ cc.Class({
         this.enemy1 = this.getPokers();
         //玩家三
         this.enemy2 = this.getPokers();
-        
         console.log("自己的牌是：",this.selfPokers);
         //对自己的牌进行排序
         this.BubbleSortForPokers(this.selfPokers);
@@ -54,6 +53,9 @@ cc.Class({
         this.poker_parent.on("touchmove",this.moveOnPokerParent,this);
         this.poker_parent.on("touchcancel",this.cancelOnParentPoker,this);
         this.poker_parent.on("touchend",this.endOnParentPoker,this);
+        console.log("玩家二的牌是：",this.enemy1);
+        console.log("玩家三的牌是：",this.enemy2);
+        console.log("剩下的牌是：");
     },
     //在所有牌的父节点上滑动事件
     moveOnPokerParent : function(e){
