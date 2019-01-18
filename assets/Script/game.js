@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-18 15:52:17
+ * @Last Modified time: 2019-01-18 16:19:15
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
@@ -26,6 +26,7 @@ cc.Class({
     onLoad () {
         //自己是否是地主
         this.isHost = false;
+        //建立长连接
         this.websocket = Websocket.createSocket();
         //是否生成牌成功
         this.createOver = false;
@@ -36,6 +37,11 @@ cc.Class({
         // this.createPoker();
         //自己的牌型数组
         this.selfPokers = this.getPokers();
+        //玩家二
+        this.enemy1 = this.getPokers();
+        //玩家三
+        this.enemy2 = this.getPokers();
+        
         console.log("自己的牌是：",this.selfPokers);
         //对自己的牌进行排序
         this.BubbleSortForPokers(this.selfPokers);
@@ -44,50 +50,80 @@ cc.Class({
         this.showSelfPoker();
         //滑动选择的牌型数组
         this.moveArr = [];
-        this.poker_parent.on("touchmove",function(e){
-            console.log("触点开始的位置是：",e.touch.getStartLocation().x);
-            console.log("e is ",e.touch.getLocationX());
-            let distance = e.touch.getLocationX() - e.touch.getStartLocation().x;
-            this.moveArr = [];
-            let nodespacestartPoint = this.poker_parent.convertToNodeSpaceAR(e.touch._startPoint);
-            let nodespaceendPoint = this.poker_parent.convertToNodeSpaceAR(e.touch._prevPoint);
-            if(this.createOver && this.pokerArr.length !== 0){
-                // console.log("开始节点--》",this.pokerArr[i].range.start,"结束位置：---》",this.pokerArr[i].range.end);
-                for(let i = 0,len=this.pokerArr.length;i < len;i++){
-                    // console.log("start-->",this.pokerArr[i].range.start,'end-->',this.pokerArr[i].range.end);
-                    //开始节点
-                    if(nodespacestartPoint.x >= this.pokerArr[i].range.start && nodespacestartPoint.x <= this.pokerArr[i].range.end){
-                        if(!this.moveArr.includes(i)){
-                            this.moveArr.push(i);
-                            // this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#F0D7D7');
-                        }
-                    }
-                    else if(nodespaceendPoint.x >= this.pokerArr[i].range.start && nodespaceendPoint.x <= this.pokerArr[i].range.end){
-                        if(!this.moveArr.includes(i)){
-                            this.moveArr.push(i);
-                            // this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#F0D7D7');
-                        }
-                    }else{
-                        this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
-                    }
-                }
-                let start = this.moveArr[0];
-                let end = this.moveArr[this.moveArr.length - 1];
-                this.moveArr = [];
-                for(let i = start; i <= end; i++){
+        //在所有牌的父节点上的一系列事件
+        this.poker_parent.on("touchmove",this.moveOnPokerParent,this);
+        this.poker_parent.on("touchcancel",this.cancelOnParentPoker,this);
+        this.poker_parent.on("touchend",this.endOnParentPoker,this);
+    },
+    //在所有牌的父节点上滑动事件
+    moveOnPokerParent : function(e){
+        console.log("触点开始的位置是：",e.touch.getStartLocation().x);
+        console.log("e is ",e.touch.getLocationX());
+        let distance = e.touch.getLocationX() - e.touch.getStartLocation().x;
+        this.moveArr = [];
+        let nodespacestartPoint = this.poker_parent.convertToNodeSpaceAR(e.touch._startPoint);
+        let nodespaceendPoint = this.poker_parent.convertToNodeSpaceAR(e.touch._prevPoint);
+        if(this.createOver && this.pokerArr.length !== 0){
+            // console.log("开始节点--》",this.pokerArr[i].range.start,"结束位置：---》",this.pokerArr[i].range.end);
+            for(let i = 0,len=this.pokerArr.length;i < len;i++){
+                // console.log("start-->",this.pokerArr[i].range.start,'end-->',this.pokerArr[i].range.end);
+                //开始节点
+                if(nodespacestartPoint.x >= this.pokerArr[i].range.start && nodespacestartPoint.x <= this.pokerArr[i].range.end){
                     if(!this.moveArr.includes(i)){
                         this.moveArr.push(i);
-                        this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#EBEAEA');
                     }
                 }
+                else if(nodespaceendPoint.x >= this.pokerArr[i].range.start && nodespaceendPoint.x <= this.pokerArr[i].range.end){
+                    if(!this.moveArr.includes(i)){
+                        this.moveArr.push(i);
+                    }
+                }else{
+                    this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
+                }
             }
-        }.bind(this));
-        this.poker_parent.on("touchcancel",function(e){
-            console.log("moveArr is ",this.moveArr);
-            console.log("moved is ",this.moved);
-            console.log("事件源的节点是：",e.target);
-            let len = this.moveArr[this.moveArr.length - 1];
-            for(let i = this.moveArr[0];i <= len;i++){
+            let start = this.moveArr[0];
+            let end = this.moveArr[this.moveArr.length - 1];
+            this.moveArr = [];
+            for(let i = start; i <= end; i++){
+                if(!this.moveArr.includes(i)){
+                    this.moveArr.push(i);
+                    this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#EBEAEA');
+                }
+            }
+        }
+    },
+    //在所有牌的父节点上取消移动
+    cancelOnParentPoker : function(e){
+        console.log("moveArr is ",this.moveArr);
+        console.log("moved is ",this.moved);
+        console.log("事件源的节点是：",e.target);
+        let len = this.moveArr[this.moveArr.length - 1];
+        for(let i = this.moveArr[0];i <= len;i++){
+            if(!this.moved){
+                console.log("moved false's moveArr ",this.moveArr);
+                this.pokerArr[i].node.getComponent('Poker').moveUp();
+                Const.willPopArr.push(this.pokerArr[i].node.getComponent('Poker').number);
+            }else{
+                let popArr = Const.willPopArr;
+                console.log("popArr is ",popArr);
+                console.log("moveArr is ",this.moveArr);
+                for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
+                    this.pokerArr[i].node.getComponent('Poker').moveDown();
+                    this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
+                }
+                Const.willPopArr = [];
+                this.moveArr = [];
+            }
+        }
+        this.moved = !this.moved;
+    },
+    //在所有牌的父节点上移动结束
+    endOnParentPoker(e){
+        let targetNode = e.target;
+        console.log("事件源节点是：",targetNode);
+        let len = this.moveArr.length;
+        if(len >= 1){
+            for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
                 if(!this.moved){
                     console.log("moved false's moveArr ",this.moveArr);
                     this.pokerArr[i].node.getComponent('Poker').moveUp();
@@ -105,33 +141,7 @@ cc.Class({
                 }
             }
             this.moved = !this.moved;
-        },this);
-        this.poker_parent.on("touchend",function(e){
-            //将e.target对应的牌进行下降或者是上升
-            let targetNode = e.target;
-            console.log("事件源节点是：",targetNode);
-            let len = this.moveArr.length;
-            if(len >= 1){
-                for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
-                    if(!this.moved){
-                        console.log("moved false's moveArr ",this.moveArr);
-                        this.pokerArr[i].node.getComponent('Poker').moveUp();
-                        Const.willPopArr.push(this.pokerArr[i].node.getComponent('Poker').number);
-                    }else{
-                        let popArr = Const.willPopArr;
-                        console.log("popArr is ",popArr);
-                        console.log("moveArr is ",this.moveArr);
-                        for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
-                            this.pokerArr[i].node.getComponent('Poker').moveDown();
-                            this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
-                        }
-                        Const.willPopArr = [];
-                        this.moveArr = [];
-                    }
-                }
-                this.moved = !this.moved;
-            }
-        },this);
+        }
     },
     start () {
         
@@ -142,13 +152,6 @@ cc.Class({
         let dis = [];
         for(let i = 0;i < this.selfPokers.length;i++){
             let disItem = {};
-            // //将生成的牌放置到牌节点的父节点
-            // let randomNum = this.createRandom(0,6);
-            // //牌的类型比如梅花，红桃，黑桃，方块
-            // console.log("randomNum is ",randomNum);
-            // //随机产生数字
-            // let pokerNumber = this.createRandom(1,13);
-            // console.log("随机生成的数字是：",pokerNumber,typeof(pokerNumber));
             let pokerNumber = this.selfPokers[i].value;
             //显示 J Q K A 
             if(pokerNumber > 10 && pokerNumber < 15){
@@ -211,29 +214,6 @@ cc.Class({
            })))
         });
     },
-    // //生成
-    // createAllPoker : function(){
-    //     let pokerTypeArr = [];
-    //     for(let i = 1;i < 13;i++){
-    //         if(i === 1){
-    //             pokerTypeArr.push('A');
-    //         }else if(i < 10){
-    //             pokerTypeArr.push(i + '');
-    //         }else{
-    //             switch(i){
-    //                 case 10 : 
-    //                     pokerTypeArr.push('J');
-    //                     break;
-    //                 case 11 : 
-    //                     pokerTypeArr.push('Q');
-    //                     break;
-    //                 case 12 :
-    //                     pokerTypeArr.push('K');         
-    //             }
-    //         }
-    //     }
-    //     console.log("pokerTypeArr is ",pokerTypeArr)
-    // },
     //对生成的牌进行排序冒泡排序
     BubbleSortForPokers : function(arr){
         let len = arr.length;
@@ -287,15 +267,10 @@ cc.Class({
         let selfPokers = [];
         for(let i = 0;i < 17;i++){
             let r = this.createRandom(0,this.allPokers.length);
-            console.log("r is ",r);
             selfPokers.push(this.allPokers[r]);
             // poker.splice(r,1);
             this.allPokers.splice(r,1);
         }
-        console.log("selfPokers is ",selfPokers);
-        // for(let i = 0;i < poker.length;i++){
-        //     selfPokers.push();
-        // }
         return selfPokers;
     },
     createPokerNumber : function(num){
@@ -320,6 +295,7 @@ cc.Class({
     /**
      * @param  {Number} min 生成随机数的最小范围
      * @param  {Number} max 生成随机数的最大范围
+     * 
      */
     createRandom : function(min,max){
         return Math.floor(Math.random()*(max - min) + min);
