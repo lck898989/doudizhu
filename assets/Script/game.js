@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-18 11:53:42
+ * @Last Modified time: 2019-01-18 15:52:17
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
@@ -24,13 +24,24 @@ cc.Class({
         moved : false
     },
     onLoad () {
+        //自己是否是地主
+        this.isHost = false;
         this.websocket = Websocket.createSocket();
         //是否生成牌成功
         this.createOver = false;
         //需要向上移动的节点数组
         this.pokerArr = [];
-        //创建牌
-        this.createPoker();
+        //创建所有牌
+        this.allPokers = this.createAllPokers();
+        // this.createPoker();
+        //自己的牌型数组
+        this.selfPokers = this.getPokers();
+        console.log("自己的牌是：",this.selfPokers);
+        //对自己的牌进行排序
+        this.BubbleSortForPokers(this.selfPokers);
+        console.log("排序后自己的牌是：",this.selfPokers);
+        //显示自己的牌
+        this.showSelfPoker();
         //滑动选择的牌型数组
         this.moveArr = [];
         this.poker_parent.on("touchmove",function(e){
@@ -77,7 +88,31 @@ cc.Class({
             console.log("事件源的节点是：",e.target);
             let len = this.moveArr[this.moveArr.length - 1];
             for(let i = this.moveArr[0];i <= len;i++){
-                if(this.pokerArr[i].node !== e.target){
+                if(!this.moved){
+                    console.log("moved false's moveArr ",this.moveArr);
+                    this.pokerArr[i].node.getComponent('Poker').moveUp();
+                    Const.willPopArr.push(this.pokerArr[i].node.getComponent('Poker').number);
+                }else{
+                    let popArr = Const.willPopArr;
+                    console.log("popArr is ",popArr);
+                    console.log("moveArr is ",this.moveArr);
+                    for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
+                        this.pokerArr[i].node.getComponent('Poker').moveDown();
+                        this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
+                    }
+                    Const.willPopArr = [];
+                    this.moveArr = [];
+                }
+            }
+            this.moved = !this.moved;
+        },this);
+        this.poker_parent.on("touchend",function(e){
+            //将e.target对应的牌进行下降或者是上升
+            let targetNode = e.target;
+            console.log("事件源节点是：",targetNode);
+            let len = this.moveArr.length;
+            if(len >= 1){
+                for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
                     if(!this.moved){
                         console.log("moved false's moveArr ",this.moveArr);
                         this.pokerArr[i].node.getComponent('Poker').moveUp();
@@ -94,58 +129,57 @@ cc.Class({
                         this.moveArr = [];
                     }
                 }
-            }
-            this.moved = !this.moved;
-        },this);
-        this.poker_parent.on("touchend",function(e){
-            //将e.target对应的牌进行下降或者是上升
-            let targetNode = e.target;
-            console.log("事件源节点是：",targetNode);
-            let len = this.moveArr.length;
-            if(len >= 1){
-                for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
-                    if(this.pokerArr[i].node !== targetNode){
-                        if(!this.moved){
-                            console.log("moved false's moveArr ",this.moveArr);
-                            this.pokerArr[i].node.getComponent('Poker').moveUp();
-                            Const.willPopArr.push(this.pokerArr[i].node.getComponent('Poker').number);
-                        }else{
-                            let popArr = Const.willPopArr;
-                            console.log("popArr is ",popArr);
-                            console.log("moveArr is ",this.moveArr);
-                            for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
-                                this.pokerArr[i].node.getComponent('Poker').moveDown();
-                                this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
-                            }
-                            Const.willPopArr = [];
-                            this.moveArr = [];
-                        }
-                    }
-                }
                 this.moved = !this.moved;
             }
         },this);
-
     },
     start () {
         
     },
-    //生成玩家的17张牌
-    createPoker : function(){
+    //显示自己的17张牌如果自己是地主的话就显示21张
+    showSelfPoker : function(){
+        console.log("自己的牌是：",this.selfPokers);
         let dis = [];
-        for(let i = 0;i < 17;i++){
+        for(let i = 0;i < this.selfPokers.length;i++){
             let disItem = {};
-            //将生成的牌放置到牌节点的父节点
-            let randomNum = this.createRandom(0,6);
-            //牌的类型比如梅花，红桃，黑桃，方块
-            console.log("randomNum is ",randomNum);
-            //随机产生数字
-            let pokerNumber = this.createRandom(1,13);
-            console.log("随机生成的数字是：",pokerNumber,typeof(pokerNumber));
-            if(pokerNumber == 1 || (pokerNumber >= 10 && pokerNumber < 14)){
+            // //将生成的牌放置到牌节点的父节点
+            // let randomNum = this.createRandom(0,6);
+            // //牌的类型比如梅花，红桃，黑桃，方块
+            // console.log("randomNum is ",randomNum);
+            // //随机产生数字
+            // let pokerNumber = this.createRandom(1,13);
+            // console.log("随机生成的数字是：",pokerNumber,typeof(pokerNumber));
+            let pokerNumber = this.selfPokers[i].value;
+            //显示 J Q K A 
+            if(pokerNumber > 10 && pokerNumber < 15){
                 pokerNumber = this.createPokerNumber(pokerNumber);
+            }else if(pokerNumber === 15){
+                pokerNumber = '2';
             }else{
-                pokerNumber = pokerNumber.toString();
+                if(pokerNumber !== 16 && pokerNumber !== 17){
+                    pokerNumber = pokerNumber.toString();
+                }
+            }
+            let randomNum = 0;
+            switch(this.selfPokers[i].type){
+                case '♤':
+                    randomNum = 0;
+                    break;
+                case '♢':
+                    randomNum = 1;
+                    break;
+                case '♡':
+                    randomNum = 2;
+                    break;
+                case '♧':
+                    randomNum = 3;
+                    break;
+                case 'x':
+                    randomNum = 4;
+                    break;
+                case 'd':
+                    randomNum = 5;
+                    break;          
             }
             console.log("pokerNumber is ",pokerNumber);
             console.log("牌的父节点的长度是：",this.poker_parent.width);
@@ -176,21 +210,107 @@ cc.Class({
                 console.log("动作执行完毕");
            })))
         });
-
+    },
+    // //生成
+    // createAllPoker : function(){
+    //     let pokerTypeArr = [];
+    //     for(let i = 1;i < 13;i++){
+    //         if(i === 1){
+    //             pokerTypeArr.push('A');
+    //         }else if(i < 10){
+    //             pokerTypeArr.push(i + '');
+    //         }else{
+    //             switch(i){
+    //                 case 10 : 
+    //                     pokerTypeArr.push('J');
+    //                     break;
+    //                 case 11 : 
+    //                     pokerTypeArr.push('Q');
+    //                     break;
+    //                 case 12 :
+    //                     pokerTypeArr.push('K');         
+    //             }
+    //         }
+    //     }
+    //     console.log("pokerTypeArr is ",pokerTypeArr)
+    // },
+    //对生成的牌进行排序冒泡排序
+    BubbleSortForPokers : function(arr){
+        let len = arr.length;
+        for(let i = 0;i < len - 1;i++){
+            for(let j = 0;j < len - 1 - i;j++){
+                if(arr[j].value < arr[j + 1].value){
+                    //交换元素
+                    let temp;
+                    temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            }
+        }
+        return arr;
+    },
+    //生成54张牌
+    createAllPokers : function(){
+        let pokerTypeArr = [];
+        for(let i = 1;i < 14;i++){
+            //花色数组
+            let typeArr = ['♤','♢','♧','♡'];
+            for(let j = 0;j < typeArr.length;j++){
+                if(i === 1){
+                    let tempJson = {
+                        value : 14
+                    }
+                    tempJson.type = typeArr[j];
+                    pokerTypeArr.push(tempJson);
+                }else if(i === 2){
+                    let tempJson = {
+                        value : 15
+                    }
+                    tempJson.type = typeArr[j];
+                    pokerTypeArr.push(tempJson);
+                }else{
+                    let tempJson = {
+                        value : i
+                    }
+                    tempJson.type = typeArr[j];
+                    pokerTypeArr.push(tempJson);
+                }
+            }
+        }
+        pokerTypeArr.push({value : 16,type:'x'});
+        pokerTypeArr.push({value : 17,type:'d'});
+        return pokerTypeArr;
+    },
+    //从54张牌中挑出自己的17张牌
+    getPokers : function(){
+        let selfPokers = [];
+        for(let i = 0;i < 17;i++){
+            let r = this.createRandom(0,this.allPokers.length);
+            console.log("r is ",r);
+            selfPokers.push(this.allPokers[r]);
+            // poker.splice(r,1);
+            this.allPokers.splice(r,1);
+        }
+        console.log("selfPokers is ",selfPokers);
+        // for(let i = 0;i < poker.length;i++){
+        //     selfPokers.push();
+        // }
+        return selfPokers;
     },
     createPokerNumber : function(num){
         let poket_text;
         switch(num){
-            case 1 : 
+            case 14 : 
                 poket_text = 'A';
                 break;
-            case 10 : 
+            case 11 : 
                 poket_text = 'J';
                 break;
-            case 11 : 
+            case 12 : 
                 poket_text = 'Q';
                 break;
-            case 12 : 
+            case 13 : 
                 poket_text = 'K';
                 break;
         }
