@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-18 16:51:53
+ * @Last Modified time: 2019-01-18 17:19:42
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
@@ -319,6 +319,21 @@ cc.Class({
     //确定出牌
     confirm : function(e,arg){
         console.log("点击确定出牌按钮后出牌的数组是：",Const.willPopArr);
+        console.log("出牌的索引位置是：",this.moveArr);
+        //将这几张牌添加一个父节点，移动父节点
+        let newNode = new cc.Node();
+        newNode.x = (this.pokerArr[this.moveArr[0]].node.x + this.pokerArr[this.moveArr[this.moveArr.length - 1]].node.x)/2;
+        newNode.y = 0;
+        newNode.parent = this.poker_parent;
+        for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
+            // this.popArr[i].node.parent = newNode;
+            this.pokerArr[i].node.parent = newNode;
+        }
+        console.log("newNode is x ",newNode.x);
+        console.log("newNode is y ",newNode.y);
+        // let action = cc.moveTo(0.5,cc.v2(newNode.x,300));
+        // newNode.runAction(action);
+
     },
     backPro : function(){
         return {
