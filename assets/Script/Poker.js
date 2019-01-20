@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 14:46:10 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-18 13:12:49
+ * @Last Modified time: 2019-01-20 11:49:42
  * 
  * 扑克类
  * 
@@ -68,13 +68,13 @@ cc.Class({
             this.node.color = cc.Color.WHITE.fromHEX("#FFFFFF");
         }.bind(this));
         this.node.on("touchcancel",function(e){
-            if(!this.touched){
-                this.moveUp();
-            }else{
-                this.moveDown();
-            }
-            this.touched = !this.touched;
-            this.node.color = cc.Color.WHITE.fromHEX("#FFFFFF");
+            // if(!this.touched){
+            //     this.moveUp();
+            // }else{
+            //     this.moveDown();
+            // }
+            // this.touched = !this.touched;
+            // this.node.color = cc.Color.WHITE.fromHEX("#FFFFFF");
         }.bind(this))
     },
 
