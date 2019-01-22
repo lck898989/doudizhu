@@ -1,11 +1,9 @@
 {
-  "ver": "2.3.0",
+  "ver": "1.0.0",
   "uuid": "d46d32fe-5fc6-4e60-8120-c289e546a9e9",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
-  "premultiplyAlpha": false,
-  "platformSettings": {},
   "subMetas": {
     "title_createroom": {
       "ver": "1.0.3",

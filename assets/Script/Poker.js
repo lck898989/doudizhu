@@ -2,7 +2,7 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 14:46:10 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-20 11:49:42
+ * @Last Modified time: 2019-01-21 14:36:21
  * 
  * 扑克类
  * 
@@ -59,6 +59,8 @@ cc.Class({
             this.node.color = cc.Color.WHITE.fromHEX('#EBEAEA');
         }.bind(this));
         this.node.on("touchend",function(e){
+            // console.log("game is ",game.pokerArr);
+            cc.find();
             if(!this.touched){
                 this.moveUp();
             }else{

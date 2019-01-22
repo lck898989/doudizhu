@@ -1,11 +1,9 @@
 {
-  "ver": "2.3.0",
+  "ver": "1.0.0",
   "uuid": "c7304eec-943b-4554-84c7-7ce6aee2564c",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
-  "premultiplyAlpha": false,
-  "platformSettings": {},
   "subMetas": {
     "join_zuoxia": {
       "ver": "1.0.3",

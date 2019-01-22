@@ -2,11 +2,11 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
- * @Last Modified time: 2019-01-20 11:59:27
+ * @Last Modified time: 2019-01-21 14:36:44
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
-cc.Class({
+let game = cc.Class({
     extends: cc.Component,
 
     properties: {
@@ -24,6 +24,7 @@ cc.Class({
         moved : false
     },
     onLoad () {
+        console.log("in game this is ",this);
         //自己是否是地主
         this.isHost = false;
         //建立长连接
@@ -120,10 +121,11 @@ cc.Class({
         }
         this.moved = !this.moved;
     },
-    //在所有牌的父节点上移动结束
+    //在所有牌的父节点上移动结束时候触发
     endOnParentPoker(e){
         let targetNode = e.target;
         console.log("事件源节点是：",targetNode);
+        console.log();
         let len = this.moveArr.length;
         if(len >= 1){
             for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
@@ -136,17 +138,17 @@ cc.Class({
                     console.log("popArr is ",popArr);
                     console.log("moveArr is ",this.moveArr);
                     for(let i = this.moveArr[0];i <= this.moveArr[this.moveArr.length - 1];i++){
-                        if(this.pokerArr[i].node === targetNode && this.pokerArr[i].node.getComponent('Poker').touched){
-                            this.pokerArr[i].node.getComponent('Poker').moveDown();
-                            this.pokerArr[i].node.getComponent('Poker').touched = !this.pokerArr[i].node.getComponent("Poker").touched;
-                            this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
-                        }
+                        this.pokerArr[i].node.getComponent('Poker').moveDown();
+                        this.pokerArr[i].node.getComponent('Poker').touched = !this.pokerArr[i].node.getComponent("Poker").touched;
+                        this.pokerArr[i].node.color = cc.Color.WHITE.fromHEX('#FFFFFF');
                     }
                     Const.willPopArr = [];
                     this.moveArr = [];
                 }
             }
             this.moved = !this.moved;
+        }else{
+            console.log("moveArr is []");
         }
     },
     start () {
@@ -235,6 +237,24 @@ cc.Class({
             }
         }
         return arr;
+    },
+    //采用快速排序进行排序操作
+    QuickSortForPokers : function(arr){
+        if(arr.length <= 1){
+            return arr;
+        }
+        let pivotIndex = Math.floor(arr.length / 2);
+        let pivot = arr.splice(pivotIndex,1)[0];
+        let left = [];
+        let right = [];
+        for(let i = 0;i < arr.length;i++){
+            if(arr[i].value < pivot.value){
+                left.push(arr[i]);
+            }else{
+                right.push(arr[i]);
+            }
+        }
+        return QuickSortForPokers(left).concat([pivot],QuickSortForPokers(right));
     },
     //生成54张牌
     createAllPokers : function(){
