@@ -2,7 +2,11 @@
  * @Author: mikey.zhaopeng 
  * @Date: 2019-01-16 13:45:31 
  * @Last Modified by: mikey.zhaopeng
+<<<<<<< HEAD
+ * @Last Modified time: 2019-01-20 20:28:36
+=======
  * @Last Modified time: 2019-01-21 14:36:44
+>>>>>>> 549f6f2192008cacd9736af22e930ca538756818
  */
 let Const = require('./Const');
 let Websocket = require('./websocket');
@@ -321,7 +325,6 @@ let game = cc.Class({
     /**
      * @param  {Number} min 生成随机数的最小范围
      * @param  {Number} max 生成随机数的最大范围
-     * 
      */
     createRandom : function(min,max){
         return Math.floor(Math.random()*(max - min) + min);

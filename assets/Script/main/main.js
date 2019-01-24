@@ -9,6 +9,7 @@ cc.Class({
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
+        // let size = new cc.Size(1920,1080);
         //获取到设计分辨率
         let size = this.node.getComponent(cc.Canvas).designResolution;
         let frameSize = cc.view.getFrameSize();
